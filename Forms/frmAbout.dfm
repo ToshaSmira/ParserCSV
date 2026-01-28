@@ -11,7 +11,7 @@ object FormAbout: TFormAbout
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnCreate = FormCreate
+  Position = poMainFormCenter
   OnShow = FormShow
   TextHeight = 15
   object AboutShapeBtm: TShape
@@ -37,8 +37,8 @@ object FormAbout: TFormAbout
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 192
-    ExplicitWidth = 571
+    ExplicitTop = 139
+    ExplicitWidth = 348
     object btnOk: TButton
       Left = 248
       Top = 13
@@ -57,7 +57,7 @@ object FormAbout: TFormAbout
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 0
+    ExplicitWidth = 348
     object lbParserCSV: TLabel
       Left = 114
       Top = 33
@@ -81,7 +81,7 @@ object FormAbout: TFormAbout
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 81
+    ExplicitWidth = 348
     object lbVersion: TLabel
       Left = 129
       Top = 1
@@ -105,10 +105,8 @@ object FormAbout: TFormAbout
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
-    ExplicitLeft = 72
-    ExplicitTop = 120
-    ExplicitWidth = 185
-    ExplicitHeight = 41
+    ExplicitWidth = 348
+    ExplicitHeight = 32
     object lbCopyright: TLabel
       Left = 98
       Top = -2

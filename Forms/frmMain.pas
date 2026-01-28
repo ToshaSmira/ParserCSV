@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, System.Actions, Vcl.ActnList;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, System.Actions, Vcl.ActnList,
+  Vcl.ComCtrls, Vcl.ExtCtrls;
 
 type
   TFormParserCSV = class(TForm)
@@ -18,12 +19,22 @@ type
     alMain: TActionList;
     aExit: TAction;
     aAbout: TAction;
+    sbMain: TStatusBar;
+    tmTime: TTimer;
+    pnlCSVData: TPanel;
+    pnlJSONData: TPanel;
+    Splitter1: TSplitter;
+    Splitter2: TSplitter;
+    pnlGridData: TPanel;
     procedure aExitExecute(Sender: TObject);
     procedure aAboutExecute(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure tmTimeTimer(Sender: TObject);
   private
-    { Private declarations }
+    procedure SetMainData;
+    function GetFormTime: String;
   public
-    { Public declarations }
+    property FormTime : String read GetFormTime;
   end;
 
 var
@@ -34,7 +45,11 @@ implementation
 {$R *.dfm}
 
 uses
+  uUtils,
   frmAbout;
+
+const
+  cViewOffset = '   ';
 
 procedure TFormParserCSV.aAboutExecute(Sender: TObject);
 begin
@@ -49,6 +64,28 @@ end;
 procedure TFormParserCSV.aExitExecute(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFormParserCSV.FormShow(Sender: TObject);
+begin
+  SetMainData;
+end;
+
+function TFormParserCSV.GetFormTime: String;
+begin
+  Result := Format(cViewOffset + 'Time: %s', [FormatDateTime('HH:nn:ss', Now)]);
+end;
+
+procedure TFormParserCSV.SetMainData;
+begin
+  sbMain.Panels[0].Text := Format(cViewOffset + 'Version: %s', [GetAppVersion]);
+  sbMain.Panels[1].Text := FormTime;
+end;
+
+procedure TFormParserCSV.tmTimeTimer(Sender: TObject);
+begin
+  if not FormTime.Equals(sbMain.Panels[1].Text) then
+    sbMain.Panels[1].Text := FormTime;
 end;
 
 end.

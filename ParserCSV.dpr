@@ -3,7 +3,8 @@ program ParserCSV;
 uses
   Vcl.Forms,
   frmMain in 'Forms\frmMain.pas' {FormParserCSV},
-  frmAbout in 'Forms\frmAbout.pas' {FormAbout};
+  frmAbout in 'Forms\frmAbout.pas' {FormAbout},
+  uUtils in 'Core\uUtils.pas';
 
 {$R *.res}
 
