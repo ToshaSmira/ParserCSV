@@ -136,6 +136,15 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\uUtils.pas"/>
+        <DCCReference Include="Core\uConstants.pas"/>
+        <DCCReference Include="Core\uParser.Core.pas"/>
+        <DCCReference Include="Core\uParser.Standard.pas"/>
+        <DCCReference Include="Core\uParser.Fast.pas"/>
+        <DCCReference Include="Core\uParser.Analysis.pas"/>
+        <DCCReference Include="Forms\frmAnalysis.pas">
+            <Form>FormAnalysis</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

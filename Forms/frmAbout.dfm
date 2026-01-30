@@ -53,66 +53,62 @@ object FormAbout: TFormAbout
     Left = 0
     Top = 1
     Width = 350
-    Height = 81
+    Height = 75
     Align = alTop
     BevelOuter = bvNone
+    Caption = 'ParserCSV'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -32
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
     TabOrder = 1
-    ExplicitWidth = 348
-    object lbParserCSV: TLabel
-      Left = 114
-      Top = 33
-      Width = 115
-      Height = 32
-      Alignment = taCenter
-      Caption = 'ParserCSV'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -24
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
   end
   object pnlVersionInfo: TPanel
     Left = 0
-    Top = 82
+    Top = 76
     Width = 350
     Height = 24
     Align = alTop
     BevelOuter = bvNone
+    Caption = '  Version: 0.0.0.0'
     TabOrder = 2
+    ExplicitTop = 82
     ExplicitWidth = 348
-    object lbVersion: TLabel
-      Left = 129
-      Top = 1
-      Width = 44
-      Height = 15
-      Caption = 'Version :'
-    end
-    object lbVersionInfo: TLabel
-      Left = 179
-      Top = 1
-      Width = 33
-      Height = 15
-      Caption = '0.0.0.0'
-    end
   end
   object pnlCopyright: TPanel
     Left = 0
-    Top = 106
+    Top = 100
     Width = 350
-    Height = 40
+    Height = 46
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitTop = 106
     ExplicitWidth = 348
     ExplicitHeight = 32
     object lbCopyright: TLabel
-      Left = 98
+      Left = 103
       Top = -2
       Width = 146
       Height = 15
       Caption = 'Copyright (c) 2026 by Smira'
+    end
+    object lbGitHubLink: TLabel
+      Left = 66
+      Top = 15
+      Width = 226
+      Height = 15
+      Cursor = crHandPoint
+      Caption = 'https://github.com/ToshaSmira/ParserCSV'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      OnClick = lbGitHubLinkClick
     end
   end
 end

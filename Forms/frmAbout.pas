@@ -12,28 +12,45 @@ type
     btnOk: TButton;
     AboutShapeBtm: TShape;
     pnlProgramName: TPanel;
-    lbParserCSV: TLabel;
     pnlVersionInfo: TPanel;
-    lbVersion: TLabel;
-    lbVersionInfo: TLabel;
     pnlCopyright: TPanel;
     lbCopyright: TLabel;
     AboutShapeTp: TShape;
+    lbGitHubLink: TLabel;
     procedure FormShow(Sender: TObject);
+    procedure lbGitHubLinkClick(Sender: TObject);
   end;
+
+procedure ShowAbout;
 
 implementation
 
 {$R *.dfm}
 
 uses
-  uUtils;
+  uUtils,
+  Winapi.ShellAPI;
 
 { TFormAbout }
 
+procedure ShowAbout;
+begin
+  with TFormAbout.Create(nil) do
+  try
+    ShowModal;
+  finally
+    Free;
+  end;
+end;
+
 procedure TFormAbout.FormShow(Sender: TObject);
 begin
-  lbVersionInfo.Caption := GetAppVersion;
+  pnlVersionInfo.Caption := GetAppVersion;
+end;
+
+procedure TFormAbout.lbGitHubLinkClick(Sender: TObject);
+begin
+  ShellExecute(0, 'open', PChar(lbGitHubLink.Caption), nil, nil, SW_SHOWNORMAL);
 end;
 
 end.
