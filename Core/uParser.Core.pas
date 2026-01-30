@@ -6,7 +6,7 @@ uses
   System.SysUtils, uConstants;
 
 type
-  TParseType = (ptStandard, ptFast);
+  TParseType = (ptStandard, ptFast, ptFire);
   TParseTypeHelper = record helper for TParseType
     function ToInteger: Integer;
   end;

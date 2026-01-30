@@ -96,6 +96,7 @@ uses
   uConstants,
   uParser.Core,
   uParser.Fast,
+  uParser.Fire,
   uParser.Standard,
   System.IOUtils,
   System.JSON,
@@ -131,6 +132,14 @@ begin
     LogMessage('=== Starting Fast Conversion ===');
     LogMessage('Method: Low-level pointer parsing with TTask');
     Parser := TFastCsvParser.Create;
+  end
+  else
+  if TParseType(cbParseType.ItemIndex) = ptFire then
+  begin
+    LogMessage('');
+    LogMessage('=== Starting Fast Conversion ===');
+    LogMessage('Method: Fire parsing with TTask');
+    Parser := TFireCsvParser.Create;
   end
   else
   begin

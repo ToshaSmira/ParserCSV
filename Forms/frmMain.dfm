@@ -128,7 +128,8 @@ object FormParserCSV: TFormParserCSV
         Text = 'Standard'
         Items.Strings = (
           'Standard'
-          'Fast')
+          'Fast'
+          'Fire')
       end
     end
     object pnlCSVManager: TPanel

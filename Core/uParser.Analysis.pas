@@ -520,37 +520,7 @@ begin
       sb.Add('   No logical errors detected (all end dates/times are after begin dates/times).');
       sb.Add('');
     end;
-    
-    sb.Add('===============================================================================');
-    sb.Add('ISO STANDARDIZATION RECOMMENDATIONS');
-    sb.Add('===============================================================================');
-    sb.Add('');
-    sb.Add('To comply with ISO 8601 standards, the following changes are required:');
-    sb.Add('');
-    sb.Add('1. DATES: Standardize all dates to ISO 8601 format: YYYY-MM-DD');
-    sb.Add('   - Convert "YYYYMMDD" -> "YYYY-MM-DD" (e.g., 20250102 -> 2025-01-02)');
-    sb.Add('   - Unify separators to dash (-) only');
-    sb.Add('');
-    sb.Add('2. TIMES: Standardize all times to ISO 8601 format: HH:MM:SS or HH:MM');
-    sb.Add('   - Convert "HHMM" -> "HH:MM" (e.g., 0730 -> 07:30)');
-    sb.Add('   - Use colon (:) as the only separator');
-    sb.Add('   - Ensure leading zeros for all time components');
-    sb.Add('');
-    sb.Add('3. INTERVALS: Use ISO 8601 time interval notation');
-    sb.Add('   - Format: YYYY-MM-DDTHH:MM/YYYY-MM-DDTHH:MM');
-    sb.Add('   - Example: "0730/1600" -> "2025-01-02T07:30/2025-01-02T16:00"');
-    sb.Add('');
-    sb.Add('4. DATA VALIDATION: Implement validation rules');
-    sb.Add('   - Ensure end_date >= begin_date');
-    sb.Add('   - Ensure end_time > begin_time when dates are equal');
-    sb.Add('');
-    sb.Add('5. NEXT STEPS:');
-    sb.Add('   - Review logical errors manually to determine if they are data entry mistakes');
-    sb.Add('   - Create data cleaning script to standardize formats');
-    sb.Add('   - Implement validation at data entry point to prevent future inconsistencies');
-    sb.Add('');
-    sb.Add('======================== END OF REPORT ========================');
-    
+
     Result := sb.Text;
   finally
     sb.Free;

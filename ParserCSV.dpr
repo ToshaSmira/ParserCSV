@@ -10,7 +10,8 @@ uses
   uParser.Standard in 'Core\uParser.Standard.pas',
   uParser.Fast in 'Core\uParser.Fast.pas',
   uParser.Analysis in 'Core\uParser.Analysis.pas',
-  frmAnalysis in 'Forms\frmAnalysis.pas' {FormAnalysis};
+  frmAnalysis in 'Forms\frmAnalysis.pas' {FormAnalysis},
+  uParser.Fire in 'Core\uParser.Fire.pas';
 
 {$R *.res}
 
