@@ -18,6 +18,11 @@ function GetAppTimeText: string;
 function ParseJsonToGridData(const aJson: string): TGridData;
 function GenerateJsonHtml(const aJson: string): string;
 
+// CSV Utilities
+function DetectCsvDelimiter(const aLine: string): Char;
+function CleanCsvField(const aField: string): string;
+procedure ParseCsvLine(const aLine: string; aDelimiter: Char; aOutput: TStringList);
+
 implementation
 
 uses
@@ -26,6 +31,39 @@ uses
 function GetAppTimeText: string;
 begin
   Result := Format(cViewOffset + 'Time: %s', [FormatDateTime('HH:nn:ss', Now)]);
+end;
+
+{ CSV Utilities }
+
+function DetectCsvDelimiter(const aLine: string): Char;
+begin
+  Result := cDelimiterComma;
+  if Pos(cDelimiterSemicolon, aLine) > 0 then
+    Result := cDelimiterSemicolon;
+end;
+
+function CleanCsvField(const aField: string): string;
+begin
+  Result := Trim(aField);
+  if (Length(Result) >= 2) and (Result[1] = cQuoteChar) and (Result[Length(Result)] = cQuoteChar) then
+    Result := Copy(Result, 2, Length(Result) - 2);
+end;
+
+procedure ParseCsvLine(const aLine: string; aDelimiter: Char; aOutput: TStringList);
+var
+  i: Integer;
+begin
+  if not Assigned(aOutput) then
+    Exit;
+    
+  aOutput.Clear;
+  aOutput.StrictDelimiter := True;
+  aOutput.Delimiter := aDelimiter;
+  aOutput.DelimitedText := aLine;
+  
+  // Clean all fields
+  for i := 0 to aOutput.Count - 1 do
+    aOutput[i] := CleanCsvField(aOutput[i]);
 end;
 
 function GetAppVersion: string;

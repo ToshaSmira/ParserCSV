@@ -3,7 +3,7 @@ unit uParser.Core;
 interface
 
 uses
-  System.SysUtils, uConstants;
+  System.SysUtils, uConstants, uUtils;
 
 type
   TParseType = (ptStandard, ptFast, ptFire);
@@ -20,30 +20,7 @@ type
       onComplete: TCompletionCallback);
   end;
 
-  TBaseCsvParser = class(TInterfacedObject, ICsvParser)
-  protected
-    function DetectDelimiter(const aLine: string): Char;
-    function CleanField(const aField: string): string;
-  public
-    procedure Convert(const aFileName: string; onProgress: TProgressCallback;
-      onComplete: TCompletionCallback); virtual; abstract;
-  end;
-
 implementation
-
-function TBaseCsvParser.DetectDelimiter(const aLine: string): Char;
-begin
-  Result := cDelimiterComma;
-  if Pos(cDelimiterSemicolon, aLine) > 0 then
-    Result := cDelimiterSemicolon
-end;
-
-function TBaseCsvParser.CleanField(const aField: string): string;
-begin
-  Result := Trim(aField);
-  if (Length(Result) >= 2) and (Result[1] = cQuoteChar) and (Result[Length(Result)] = cQuoteChar) then
-    Result := Copy(Result, 2, Length(Result) - 2);
-end;
 
 { TParseTypeHelper }
 

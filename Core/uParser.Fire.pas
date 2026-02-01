@@ -5,16 +5,16 @@ interface
 uses
   System.SysUtils, System.Classes, System.Threading, System.Diagnostics,
   System.IOUtils, FireDAC.Comp.BatchMove, FireDAC.Comp.BatchMove.Text,
-  FireDAC.Comp.BatchMove.JSON, FireDAC.Stan.Intf, uParser.Core, uConstants;
+  FireDAC.Comp.BatchMove.JSON, FireDAC.Stan.Intf, uParser.Core, uConstants, uUtils;
 
 type
-  TFireCsvParser = class(TBaseCsvParser)
+  TFireCsvParser = class(TInterfacedObject, ICsvParser)
   private
     procedure ParseCsvToJson(const aFileName: string;
       onProgress: TProgressCallback; onComplete: TCompletionCallback);
   public
     procedure Convert(const aFileName: string; onProgress: TProgressCallback;
-      onComplete: TCompletionCallback); override;
+      onComplete: TCompletionCallback);
   end;
 
 implementation
@@ -54,7 +54,7 @@ begin
       try
         lines.LoadFromFile(aFileName);
         if lines.Count > 0 then
-          delimiter := DetectDelimiter(lines[0]);
+          delimiter := DetectCsvDelimiter(lines[0]);
       finally
         lines.Free;
       end;

@@ -4,16 +4,16 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.JSON, System.Threading, 
-  System.Diagnostics, System.Math, uParser.Core, uConstants;
+  System.Diagnostics, System.Math, uParser.Core, uConstants, uUtils;
 
 type
-  TStandardCsvParser = class(TBaseCsvParser)
+  TStandardCsvParser = class(TInterfacedObject, ICsvParser)
   private
     procedure ParseCsvToJson(const aFileName: string; 
       onProgress: TProgressCallback; onComplete: TCompletionCallback);
   public
     procedure Convert(const aFileName: string; onProgress: TProgressCallback; 
-      onComplete: TCompletionCallback); override;
+      onComplete: TCompletionCallback);
   end;
 
 implementation
@@ -67,12 +67,12 @@ begin
 
       // Parse headers
       headers.StrictDelimiter := True;
-      headers.Delimiter := DetectDelimiter(csvLines[0]);
+      headers.Delimiter := DetectCsvDelimiter(csvLines[0]);
       headers.DelimitedText := csvLines[0];
 
       // Clean headers
       for var i := 0 to headers.Count - 1 do
-        headers[i] := CleanField(headers[i]);
+        headers[i] := CleanCsvField(headers[i]);
 
       if csvLines.Count = 1 then
       begin
@@ -104,7 +104,7 @@ begin
         var jsonObj := TJSONObject.Create;
         try
           for var j := 0 to Min(headers.Count - 1, fields.Count - 1) do
-            jsonObj.AddPair(headers[j], CleanField(fields[j]));
+            jsonObj.AddPair(headers[j], CleanCsvField(fields[j]));
           
           jsonArray.AddElement(jsonObj);
         except

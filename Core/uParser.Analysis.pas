@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.DateUtils,
-  System.RegularExpressions, System.StrUtils, System.Math;
+  System.RegularExpressions, System.StrUtils, System.Math, uUtils;
 
 type
   TFormatInfo = record
@@ -21,6 +21,8 @@ type
     Details: string;
   end;
 
+  TPatternIdentifier = reference to function(const value: string): string;
+
   TDataQualityAnalyzer = class
   private
     FFileName: string;
@@ -31,9 +33,10 @@ type
     FLogicalErrors: TList<TLogicalError>;
     
     procedure LoadCsvFile;
-    procedure AnalyzeDateFormats;
-    procedure AnalyzeTimeFormats;
-    procedure AnalyzeIntervalFormats;
+    procedure AnalyzeColumnFormats(const columnNames: TArray<string>; 
+      patternFunc: TPatternIdentifier; formatDict: TDictionary<string, TFormatInfo>);
+    procedure AddOrUpdateFormat(const pattern, columnName, value: string; 
+      rowIdx: Integer; formatDict: TDictionary<string, TFormatInfo>);
     procedure AnalyzeLogicalErrors;
     function IdentifyDatePattern(const value: string): string;
     function IdentifyTimePattern(const value: string): string;
@@ -42,7 +45,6 @@ type
     function GenerateReport: string;
     function GetOverallStatus: string;
     function GetColIdx(const name: string): Integer;
-    function CleanField(const field: string): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -77,13 +79,6 @@ begin
   inherited;
 end;
 
-function TDataQualityAnalyzer.CleanField(const field: string): string;
-begin
-  Result := Trim(field);
-  if (Length(Result) >= 2) and (Result[1] = '"') and (Result[Length(Result)] = '"') then
-    Result := Copy(Result, 2, Length(Result) - 2);
-end;
-
 function TDataQualityAnalyzer.GetColIdx(const name: string): Integer;
 begin
   Result := FHeaders.IndexOf(name);
@@ -91,50 +86,36 @@ end;
 
 procedure TDataQualityAnalyzer.LoadCsvFile;
 var
-  csvLines, fields: TStringList;
-  i, j: Integer;
+  csvLines: TStringList;
+  i: Integer;
   row: TStringList;
   delimiter: Char;
 begin
   csvLines := TStringList.Create;
-  fields := TStringList.Create;
   try
     csvLines.LoadFromFile(FFileName);
     if csvLines.Count = 0 then
       raise Exception.Create('CSV file is empty');
     
-    if Pos(';', csvLines[0]) > 0 then
-      delimiter := ';'
-    else
-      delimiter := ',';
-    
-    FHeaders.StrictDelimiter := True;
-    FHeaders.Delimiter := delimiter;
-    FHeaders.DelimitedText := csvLines[0];
-    for i := 0 to FHeaders.Count - 1 do
-      FHeaders[i] := CleanField(FHeaders[i]);
-    
-    fields.StrictDelimiter := True;
-    fields.Delimiter := delimiter;
+    delimiter := DetectCsvDelimiter(csvLines[0]);
+    ParseCsvLine(csvLines[0], delimiter, FHeaders);
     
     for i := 1 to csvLines.Count - 1 do
     begin
       if Trim(csvLines[i]) = '' then
         Continue;
-      fields.DelimitedText := csvLines[i];
-      if fields.Count = 0 then
-        Continue;
       
       row := TStringList.Create;
-      for j := 0 to fields.Count - 1 do
-        row.Add(CleanField(fields[j]));
-      FDataRows.Add(row);
+      ParseCsvLine(csvLines[i], delimiter, row);
+      if row.Count > 0 then
+        FDataRows.Add(row)
+      else
+        row.Free;
     end;
     
     FTotalRows := FDataRows.Count;
   finally
     csvLines.Free;
-    fields.Free;
   end;
 end;
 
@@ -190,155 +171,45 @@ begin
     Result := 'Unknown separator';
 end;
 
-procedure TDataQualityAnalyzer.AnalyzeDateFormats;
+procedure TDataQualityAnalyzer.AddOrUpdateFormat(const pattern, columnName, value: string; 
+  rowIdx: Integer; formatDict: TDictionary<string, TFormatInfo>);
 var
-  i, bdIdx, edIdx: Integer;
-  value, pattern: string;
   info: TFormatInfo;
 begin
-  bdIdx := GetColIdx('Begin_Date');
-  edIdx := GetColIdx('End_Date');
-  
-  for i := 0 to FDataRows.Count - 1 do
+  if formatDict.TryGetValue(pattern, info) then
   begin
-    if (bdIdx >= 0) and (bdIdx < FDataRows[i].Count) then
-    begin
-      value := FDataRows[i][bdIdx];
-      if value <> '' then
-      begin
-        pattern := IdentifyDatePattern(value);
-        if FDateFormats.TryGetValue(pattern, info) then
-        begin
-          Inc(info.Count);
-          FDateFormats[pattern] := info;
-        end
-        else
-        begin
-          info.Pattern := pattern;
-          info.Count := 1;
-          info.ExampleRow := i + 2;
-          info.ExampleColumn := 'Begin_Date';
-          info.ExampleValue := value;
-          FDateFormats.Add(pattern, info);
-        end;
-      end;
-    end;
-    
-    if (edIdx >= 0) and (edIdx < FDataRows[i].Count) then
-    begin
-      value := FDataRows[i][edIdx];
-      if value <> '' then
-      begin
-        pattern := IdentifyDatePattern(value);
-        if FDateFormats.TryGetValue(pattern, info) then
-        begin
-          Inc(info.Count);
-          FDateFormats[pattern] := info;
-        end
-        else
-        begin
-          info.Pattern := pattern;
-          info.Count := 1;
-          info.ExampleRow := i + 2;
-          info.ExampleColumn := 'End_Date';
-          info.ExampleValue := value;
-          FDateFormats.Add(pattern, info);
-        end;
-      end;
-    end;
+    Inc(info.Count);
+    formatDict[pattern] := info;
+  end
+  else
+  begin
+    info.Pattern := pattern;
+    info.Count := 1;
+    info.ExampleRow := rowIdx + 2;  // +2 because row 1 is header
+    info.ExampleColumn := columnName;
+    info.ExampleValue := value;
+    formatDict.Add(pattern, info);
   end;
 end;
 
-procedure TDataQualityAnalyzer.AnalyzeTimeFormats;
+procedure TDataQualityAnalyzer.AnalyzeColumnFormats(const columnNames: TArray<string>; 
+  patternFunc: TPatternIdentifier; formatDict: TDictionary<string, TFormatInfo>);
 var
-  i, btIdx, etIdx: Integer;
+  i, j, colIdx: Integer;
   value, pattern: string;
-  info: TFormatInfo;
 begin
-  btIdx := GetColIdx('Begin_Time');
-  etIdx := GetColIdx('End_Time');
-  
   for i := 0 to FDataRows.Count - 1 do
   begin
-    if (btIdx >= 0) and (btIdx < FDataRows[i].Count) then
+    for j := 0 to High(columnNames) do
     begin
-      value := FDataRows[i][btIdx];
-      if value <> '' then
+      colIdx := GetColIdx(columnNames[j]);
+      if (colIdx >= 0) and (colIdx < FDataRows[i].Count) then
       begin
-        pattern := IdentifyTimePattern(value);
-        if FTimeFormats.TryGetValue(pattern, info) then
+        value := FDataRows[i][colIdx];
+        if value <> '' then
         begin
-          Inc(info.Count);
-          FTimeFormats[pattern] := info;
-        end
-        else
-        begin
-          info.Pattern := pattern;
-          info.Count := 1;
-          info.ExampleRow := i + 2;
-          info.ExampleColumn := 'Begin_Time';
-          info.ExampleValue := value;
-          FTimeFormats.Add(pattern, info);
-        end;
-      end;
-    end;
-    
-    if (etIdx >= 0) and (etIdx < FDataRows[i].Count) then
-    begin
-      value := FDataRows[i][etIdx];
-      if value <> '' then
-      begin
-        pattern := IdentifyTimePattern(value);
-        if FTimeFormats.TryGetValue(pattern, info) then
-        begin
-          Inc(info.Count);
-          FTimeFormats[pattern] := info;
-        end
-        else
-        begin
-          info.Pattern := pattern;
-          info.Count := 1;
-          info.ExampleRow := i + 2;
-          info.ExampleColumn := 'End_Time';
-          info.ExampleValue := value;
-          FTimeFormats.Add(pattern, info);
-        end;
-      end;
-    end;
-  end;
-end;
-
-procedure TDataQualityAnalyzer.AnalyzeIntervalFormats;
-var
-  i, colIdx: Integer;
-  value, pattern: string;
-  info: TFormatInfo;
-begin
-  colIdx := GetColIdx('Begin_And_End_Time');
-  if colIdx < 0 then
-    Exit;
-  
-  for i := 0 to FDataRows.Count - 1 do
-  begin
-    if colIdx < FDataRows[i].Count then
-    begin
-      value := FDataRows[i][colIdx];
-      if value <> '' then
-      begin
-        pattern := IdentifyIntervalPattern(value);
-        if FIntervalFormats.TryGetValue(pattern, info) then
-        begin
-          Inc(info.Count);
-          FIntervalFormats[pattern] := info;
-        end
-        else
-        begin
-          info.Pattern := pattern;
-          info.Count := 1;
-          info.ExampleRow := i + 2;
-          info.ExampleColumn := 'Begin_And_End_Time';
-          info.ExampleValue := value;
-          FIntervalFormats.Add(pattern, info);
+          pattern := patternFunc(value);
+          AddOrUpdateFormat(pattern, columnNames[j], value, i, formatDict);
         end;
       end;
     end;
@@ -533,9 +404,16 @@ begin
   
   try
     LoadCsvFile;
-    AnalyzeDateFormats;
-    AnalyzeTimeFormats;
-    AnalyzeIntervalFormats;
+    
+    // Analyze date formats
+    AnalyzeColumnFormats(['Begin_Date', 'End_Date'], IdentifyDatePattern, FDateFormats);
+    
+    // Analyze time formats
+    AnalyzeColumnFormats(['Begin_Time', 'End_Time'], IdentifyTimePattern, FTimeFormats);
+    
+    // Analyze interval formats
+    AnalyzeColumnFormats(['Begin_And_End_Time'], IdentifyIntervalPattern, FIntervalFormats);
+    
     AnalyzeLogicalErrors;
     Result := GenerateReport;
   except

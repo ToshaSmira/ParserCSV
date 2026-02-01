@@ -4,14 +4,14 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.JSON,
-  System.Threading, System.Diagnostics, System.Math, uParser.Core, uConstants;
+  System.Threading, System.Diagnostics, System.Math, uParser.Core, uConstants, uUtils;
 
 type
-  TFastCsvParser = class(TBaseCsvParser)
+  TFastCsvParser = class(TInterfacedObject, ICsvParser)
   private
     procedure ParseCsvToJson(const aFileName: string; onProgress: TProgressCallback; onComplete: TCompletionCallback);
   public
-    procedure Convert(const aFileName: string; onProgress: TProgressCallback; onComplete: TCompletionCallback); override;
+    procedure Convert(const aFileName: string; onProgress: TProgressCallback; onComplete: TCompletionCallback);
   end;
 
 implementation
@@ -69,7 +69,7 @@ begin
       SetLength(buffer, fileStream.Size);
       fileStream.ReadBuffer(buffer[0], fileStream.Size);
       textContent := TEncoding.UTF8.GetString(buffer);
-      delimiter := DetectDelimiter(textContent);
+      delimiter := DetectCsvDelimiter(textContent);
       
       pStart := PChar(textContent);
       pCurrent := pStart;
@@ -83,7 +83,7 @@ begin
         begin
           var fieldValue: string;
           SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-          headers.Add(CleanField(fieldValue));
+          headers.Add(CleanCsvField(fieldValue));
           Inc(pCurrent);
           pFieldStart := pCurrent;
         end
@@ -91,7 +91,7 @@ begin
         begin
           var fieldValue: string;
           SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-          headers.Add(CleanField(fieldValue));
+          headers.Add(CleanCsvField(fieldValue));
           Inc(pCurrent, 2);
           pFieldStart := pCurrent;
           Break;
@@ -100,7 +100,7 @@ begin
         begin
           var fieldValue: string;
           SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-          headers.Add(CleanField(fieldValue));
+          headers.Add(CleanCsvField(fieldValue));
           Inc(pCurrent);
           pFieldStart := pCurrent;
           Break;
@@ -135,7 +135,7 @@ begin
           begin
             var fieldValue: string;
             SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-            currentRow[fieldIndex] := CleanField(fieldValue);
+            currentRow[fieldIndex] := CleanCsvField(fieldValue);
             Inc(fieldIndex);
             Inc(pCurrent);
             pFieldStart := pCurrent;
@@ -144,7 +144,7 @@ begin
           begin
             var fieldValue: string;
             SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-            currentRow[fieldIndex] := CleanField(fieldValue);
+            currentRow[fieldIndex] := CleanCsvField(fieldValue);
             Inc(fieldIndex);
             Inc(pCurrent, 2);
             pFieldStart := pCurrent;
@@ -154,7 +154,7 @@ begin
           begin
             var fieldValue: string;
             SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-            currentRow[fieldIndex] := CleanField(fieldValue);
+            currentRow[fieldIndex] := CleanCsvField(fieldValue);
             Inc(fieldIndex);
             Inc(pCurrent);
             pFieldStart := pCurrent;
@@ -169,7 +169,7 @@ begin
         begin
           var fieldValue: string;
           SetString(fieldValue, pFieldStart, pCurrent - pFieldStart);
-          currentRow[fieldIndex] := CleanField(fieldValue);
+          currentRow[fieldIndex] := CleanCsvField(fieldValue);
           Inc(fieldIndex);
         end;
 
