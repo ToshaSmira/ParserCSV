@@ -15,8 +15,8 @@ type
 
 function GetAppVersion: string;
 function GetAppTimeText: string;
-function ParseJsonToGridData(const aJson: string): TGridData;
-function GenerateJsonHtml(const aJson: string): string;
+function JsonToHtml(const aJson: string): string;
+function JsonToGridData(const aJson: string): TGridData;
 
 // CSV Utilities
 function DetectCsvDelimiter(const aLine: string): Char;
@@ -97,7 +97,7 @@ begin
   end;
 end;
 
-function ParseJsonToGridData(const aJson: string): TGridData;
+function JsonToGridData(const aJson: string): TGridData;
 var
   rowData: TArray<string>;
 begin
@@ -172,7 +172,7 @@ begin
   end;
 end;
 
-function GenerateJsonHtml(const aJson: string): string;
+function JsonToHtml(const aJson: string): string;
   function EscapeHtml(const aText: string): string;
   begin
     Result := aText;

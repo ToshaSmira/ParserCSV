@@ -16,8 +16,7 @@ type
 
   ICsvParser = interface
     ['{B8E7F1A2-3C4D-4E5F-A6B7-C8D9E0F1A2B3}']
-    procedure Convert(const aFileName: string; onProgress: TProgressCallback;
-      onComplete: TCompletionCallback);
+    procedure Convert(const aFileName: string; onProgress: TProgressCallback; onComplete: TCompletionCallback);
   end;
 
 implementation

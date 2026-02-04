@@ -68,15 +68,13 @@ type
     procedure aAnalysisExecute(Sender: TObject);
   private
     FIsRunning: Boolean;
-    FSelectedFile: String;
     FJSONContent: String;
-
-    procedure SetMainData;
-    procedure SetBaseState;
-    procedure SetOpenCSV;
+    FSelectedFile: String;
 
     procedure LogClear;
     procedure LogMessage(const aMessage: string);
+
+    procedure SetControls(aEnabled: Boolean);
     procedure UpdateProgress(aPercent: Integer);
     procedure OnComplete(aSuccess: Boolean; aElapsedMs: Int64; const aJsonResult: string; const aMessage: string);
 
@@ -117,43 +115,30 @@ procedure TFormParserCSV.aCSVLoadExecute(Sender: TObject);
 var
   Parser: ICsvParser;
 begin
-  if TParseType(cbParseType.ItemIndex) = ptStandard then
-  begin
-    LogMessage('');
-    LogMessage('=== Starting Standard Conversion ===');
-    LogMessage('Method: TStringList with TThread');
+  LogMessage('');
+  aCSVOpen.Enabled := False;
 
-    Parser := TStandardCsvParser.Create;
-  end
-  else
-  if TParseType(cbParseType.ItemIndex) = ptFast then
-  begin
-    LogMessage('');
-    LogMessage('=== Starting Fast Conversion ===');
-    LogMessage('Method: Low-level pointer parsing with TTask');
-    Parser := TFastCsvParser.Create;
-  end
-  else
-  if TParseType(cbParseType.ItemIndex) = ptFire then
-  begin
-    LogMessage('');
-    LogMessage('=== Starting Fast Conversion ===');
-    LogMessage('Method: Fire parsing with TTask');
-    Parser := TFireCsvParser.Create;
-  end
-  else
-  begin
-    ShowMessage('Invalid parser type selected');
-    Exit;
+  case TParseType(cbParseType.ItemIndex) of
+    ptFast : begin
+      LogMessage('=== Starting Fast Conversion ===');
+      LogMessage('Method: Low-level pointer parsing with TTask');
+      Parser := TFastCsvParser.Create;
+    end;
+    ptFire : begin
+      LogMessage('=== Starting Fire Conversion ===');
+      LogMessage('Method: Fire parsing with TTask');
+      Parser := TFireCsvParser.Create;
+    end
+    else
+    begin //ptStandard
+      LogMessage('=== Starting Standard Conversion ===');
+      LogMessage('Method: TStringList with TThread');
+      Parser := TStandardCsvParser.Create;
+    end;
   end;
 
-  aCSVOpen.Enabled := False;
-  aCSVLoad.Enabled := False;
-  aJSONSave.Enabled := False;
-  aAnalysis.Enabled := False;
-
   FIsRunning := True;
-  pbCSVProgress.Position := 0;
+  SetControls(False);
   Parser.Convert(FSelectedFile, UpdateProgress, OnComplete);
 end;
 
@@ -195,13 +180,9 @@ end;
 
 procedure TFormParserCSV.DisplayGrid(const aJson: string);
 begin
-  sgGridView.Enabled := False;
-
-  var gridData := ParseJsonToGridData(aJson);
+  var gridData := JsonToGridData(aJson);
   if not gridData.IsValid then
-    Exit
-  else
-    sgGridView.Enabled := True;
+    raise Exception.Create(gridData.ErrorMessage);
 
   sgGridView.ColCount := Length(gridData.Headers);
   sgGridView.RowCount := Length(gridData.Rows) + 1;
@@ -219,17 +200,16 @@ end;
 
 procedure TFormParserCSV.DisplayJson(const aJson: string);
 begin
-  var htmlContent := GenerateJsonHtml(aJson);
-  
   wbJSONView.Navigate('about:blank');
   while wbJSONView.ReadyState <> READYSTATE_COMPLETE do
     Application.ProcessMessages;
-  
+
   if Assigned(wbJSONView.Document) then
   begin
     var htmlDoc := wbJSONView.Document as IHTMLDocument2;
     var Data := VarArrayCreate([0, 0], varVariant);
-    Data[0] := htmlContent;
+    Data[0] := JsonToHtml(aJson);
+
     htmlDoc.write(PSafeArray(TVarData(Data).VArray));
     htmlDoc.close;
   end;
@@ -237,9 +217,21 @@ end;
 
 procedure TFormParserCSV.FormShow(Sender: TObject);
 begin
-  SetOpenCSV;
-  SetMainData;
-  SetBaseState;
+  FJSONContent := '';
+  FSelectedFile := '';
+  FIsRunning := False;
+
+  SetControls(False);
+  edJSONPath.Enabled := False;
+  pnlCSVProcess.Visible := False;
+
+  odCSVOpen.Filter := cCsvFileFilter;
+  odCSVOpen.Title := cCsvDialogTitle;
+
+  sbMain.Panels[0].Text := GetAppVersion;
+  sbMain.Panels[1].Text := GetAppTimeText;
+
+  cbParseType.ItemIndex := ptStandard.ToInteger;
 end;
 
 procedure TFormParserCSV.LogClear;
@@ -262,65 +254,40 @@ end;
 procedure TFormParserCSV.OnComplete(aSuccess: Boolean; aElapsedMs: Int64; const aJsonResult: string; const aMessage: string);
 begin
   FIsRunning := False;
-  aCSVOpen.Enabled := True;
-  aCSVLoad.Enabled := True;
-  aJSONSave.Enabled := True;
-  aAnalysis.Enabled := True;
-  wbJSONView.Enabled := True;
 
   if aSuccess then
   begin
+    FJSONContent := aJsonResult;
+
+    DisplayGrid(FJSONContent);
+    DisplayJson(FJSONContent);
+    edJSONPath.Text := ChangeFileExt(FSelectedFile, cExtJson);
+
     LogMessage('Completed successfully!');
     LogMessage(Format(cFormatElapsedTime, [aElapsedMs, aElapsedMs / cMillisecondsPerSecond]));
     LogMessage(aMessage);
-
-    FJSONContent := aJsonResult;
-    edJSONPath.Text := ChangeFileExt(FSelectedFile, cExtJson);
-
-    if not FJSONContent.IsEmpty then
-    begin
-      DisplayGrid(FJSONContent);
-      DisplayJson(FJSONContent);
-    end;
   end
   else
   begin
     LogMessage('Failed: ' + aMessage);
     ShowMessage('Conversion failed: ' + aMessage);
   end;
+
+  SetControls(aSuccess);
+  aCSVOpen.Enabled := True;
 end;
 
-procedure TFormParserCSV.SetBaseState;
+procedure TFormParserCSV.SetControls(aEnabled: Boolean);
 begin
-  //CSV State
-  aCSVLoad.Enabled := False;
-  pnlCSVProcess.Visible := False;
-  //Grid State
-  sgGridView.Enabled := False;
-  btnCSVAnalysis.Enabled := False;
-  //Json State
-  wbJSONView.Enabled := False;
-  edJSONPath.Enabled := False;
-  aJSONSave.Enabled := False;
-  aAnalysis.Enabled := False;
-end;
+  aCSVLoad.Enabled := aEnabled;
+  aJSONSave.Enabled := aEnabled;
+  aAnalysis.Enabled := aEnabled;
 
-procedure TFormParserCSV.SetMainData;
-begin
-  FIsRunning := False;
-  FSelectedFile := '';
-  FJSONContent := '';
+  sgGridView.Enabled := aEnabled;
+  wbJSONView.Enabled := aEnabled;
 
-  sbMain.Panels[0].Text := GetAppVersion;
-  sbMain.Panels[1].Text := GetAppTimeText;
-
-  cbParseType.ItemIndex := ptStandard.ToInteger;
-end;
-
-procedure TFormParserCSV.SetOpenCSV;
-begin
-  odCSVOpen.Filter := cCsvFileFilter;
-  odCSVOpen.Title := cCsvDialogTitle;
+  if not aEnabled then
+    pbCSVProgress.Position := 0;
 end;
 
 procedure TFormParserCSV.tmTimeTimer(Sender: TObject);

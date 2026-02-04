@@ -186,6 +186,9 @@ object FormParserCSV: TFormParserCSV
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 0
+          DesignSize = (
+            250
+            41)
           object lbCSVProcess: TLabel
             Left = 8
             Top = 10
@@ -198,6 +201,7 @@ object FormParserCSV: TFormParserCSV
             Top = 8
             Width = 188
             Height = 21
+            Anchors = [akLeft, akTop, akRight]
             TabOrder = 0
           end
         end
