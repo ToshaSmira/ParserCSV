@@ -147,15 +147,21 @@ begin
    if odCSVOpen.Execute then
   begin
     FSelectedFile := odCSVOpen.FileName;
-
     aCSVLoad.Enabled := True;
     pnlCSVProcess.Visible := True;
-    edCSVPath.Text := FSelectedFile;
 
     LogClear;
     LogMessage('Selected file: ' + ExtractFileName(FSelectedFile));
     LogMessage('File size: ' + FormatFloat(cFormatFileSize, TFile.GetSize(FSelectedFile)) + ' bytes');
+  end
+  else
+  begin
+    FSelectedFile := '';
+    aCSVLoad.Enabled := False;
+    pnlCSVProcess.Visible := False;
   end;
+
+  edCSVPath.Text := FSelectedFile;
 end;
 
 procedure TFormParserCSV.aExitExecute(Sender: TObject);
